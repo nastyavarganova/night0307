@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Ночь 03:07 — Глава 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Neucha&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0c0911; --paper:#e9e1d0; --muted:#9a90a8; --accent:#c8323f; --panel:#1b1426; font-family:"Neucha","Comic Sans MS",cursive; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--paper); }
+  body { display:flex; flex-direction:column; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 12px calc(env(safe-area-inset-bottom,0px) + 12px); user-select:none; -webkit-user-select:none; }
+  #wrap { width:min(100%,520px); position:relative; touch-action:none; overflow:hidden; border-radius:12px; }
+  svg { width:100%; height:auto; display:block; background:#000; }
+  #dark { position:absolute; inset:0; pointer-events:none; transition:opacity .4s; background:radial-gradient(circle 125px at var(--x,50%) var(--y,55%), transparent 0, rgba(5,3,9,.5) 55%, rgba(5,3,9,.95) 100%); }
+  #wrap.lit #dark { opacity:0; }
+  .hs { fill:transparent; cursor:pointer; }
+  .hint .hs { stroke:var(--accent); stroke-width:2; stroke-dasharray:5 3; }
+  .blink { animation:blink 4s infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes blink { 0%,90%,100% { transform:scaleY(1); } 94% { transform:scaleY(.1); } }
+  .flick { animation:flick 2.5s infinite; }
+  @keyframes flick { 0%,100% { opacity:1; } 8% { opacity:.3; } 12% { opacity:.9; } 55% { opacity:.6; } 58% { opacity:1; } }
+  #say { width:min(100%,520px); min-height:96px; padding:12px 14px; border-radius:12px; background:var(--panel); font-size:19px; line-height:1.35; }
+  #bar { width:min(100%,520px); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .it, .tool { padding:8px 12px; border:2px solid var(--muted); border-radius:10px; background:transparent; color:var(--paper); font:inherit; font-size:16px; cursor:pointer; }
+  .it.on { border-color:var(--accent); background:rgba(200,50,63,.25); }
+  .tool { border-style:dashed; } #empty { color:var(--muted); font-size:15px; } #inv { display:contents; } #hintBtn { margin-left:auto; }
+  .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:20px; text-align:center; background:rgba(6,4,10,.94); z-index:5; }
+  .modal.show { display:flex; }
+  .modal h2 { margin:0; font-size:30px; } .modal p { margin:0; max-width:360px; font-size:20px; line-height:1.35; }
+  .modal input { width:170px; padding:10px; text-align:center; font:inherit; font-size:32px; letter-spacing:6px; border-radius:10px; border:2px solid var(--paper); background:#000; color:var(--paper); }
+  .go { padding:10px 22px; border:0; border-radius:10px; background:var(--accent); color:#fff; font:inherit; font-size:18px; cursor:pointer; margin:3px; }
+  #dlgB { display:flex; flex-direction:column; gap:8px; }
+  :focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+</style>
+</head>
+<body>
+  <div id="wrap"><svg id="scene" viewBox="0 0 400 300"><defs><filter id="wob"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter></defs><g id="art"></g></svg><div id="dark"></div></div>
+  <div id="say"></div>
+  <div id="bar"><span id="empty">Вещей пока нет</span><span id="inv"></span><button class="tool" id="hintBtn">Свет</button><button class="tool" id="snd">🔈</button><button class="tool" id="restart">Заново</button></div>
+  <div class="modal" id="padM"><h2 id="padT">Замок</h2><p>Четыре цифры.</p><input id="code" inputmode="numeric" maxlength="4" placeholder="----" autocomplete="off"><div><button class="go" id="codeOk">Ввести</button><button class="tool" id="codeX">Назад</button></div></div>
+  <div class="modal" id="dlgM"><p id="dlgT"></p><div id="dlgB"></div></div>
+  <div class="modal" id="endM"><h2 id="endT"></h2><p id="endP"></p><div><button class="go" id="again">Заново</button> <a class="go" href="index.html" style="text-decoration:none;display:inline-block">Глава 1</a></div></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const R = 'rect class="hs"';
+const ink = 'stroke="#e9e1d0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"';
+let S, sel;
+
+const SCENES = {
+  living: () => `<rect width="400" height="300" fill="#1c1722"/><polygon points="0,240 400,240 400,300 0,300" fill="#100c16"/>
+  <g filter="url(#wob)" ${ink} fill="none">
+    <rect x="12" y="90" width="68" height="150" fill="#3a2a22"/><circle cx="68" cy="170" r="4"/><rect x="58" y="140" width="14" height="18" fill="#111"/>
+    <rect x="108" y="66" width="64" height="50" fill="#2a2230"/><circle cx="125" cy="88" r="6"/><circle cx="140" cy="86" r="5"/><circle cx="155" cy="88" r="6"/><path d="M118 112q22 -10 44 0"/>
+    <rect x="185" y="128" width="92" height="112" fill="#2a2230"/><rect x="200" y="150" width="62" height="90" fill="#070509"/><path d="M210 238l10 -12 8 12M232 238l8 -9 8 9" stroke-opacity=".5"/>
+    <rect x="300" y="196" width="72" height="44" fill="#33283f"/><rect x="310" y="164" width="52" height="32" fill="#4a3a2a"/><circle cx="326" cy="180" r="7"/><circle cx="348" cy="180" r="7"/>
+    <path d="M150 0V30"/><ellipse class="flick" cx="150" cy="38" rx="18" ry="9" fill="#e6d89a" fill-opacity=".8"/>
+  </g>
+  <text x="108" y="132" fill="#e9e1d0" font-size="12">Мама · 14.09</text>
+  ${S.shadow ? '<path d="M215 240Q205 120 230 92Q255 120 245 240Z" fill="#000"/><ellipse class="blink" cx="223" cy="128" rx="3" ry="6" fill="#fff"/><ellipse class="blink" cx="238" cy="128" rx="3" ry="6" fill="#fff"/>' : ''}
+  <text x="12" y="285" fill="#e9e1d0" font-size="16">← кухня</text><text x="318" y="285" fill="#e9e1d0" font-size="16">↑ чердак</text>
+  <${R} data-h="front" x="12" y="90" width="68" height="150"/><${R} data-h="photo" x="108" y="66" width="64" height="66"/><${R} data-h="fire" x="185" y="128" width="92" height="112"/>
+  <${R} data-h="radio" x="300" y="160" width="72" height="80"/><${R} data-h="toKitchen" x="0" y="262" width="100" height="38"/><${R} data-h="toAttic" x="305" y="262" width="95" height="38"/>`,
+
+  kitchen: () => `<rect width="400" height="300" fill="#1a1d22"/><polygon points="0,240 400,240 400,300 0,300" fill="#0e1014"/>
+  <g filter="url(#wob)" ${ink} fill="none">
+    <rect x="30" y="40" width="110" height="90" fill="#2a2f36"/><path d="M30 85H140M85 40V130"/><circle cx="95" cy="60" r="8" fill="#d8dca8" stroke="none"/>
+    <rect x="165" y="60" width="90" height="180" fill="#3a3430"/><path d="M165 120H255"/><circle cx="178" cy="95" r="3"/><circle cx="178" cy="165" r="3"/>
+    <rect x="280" y="150" width="100" height="90" fill="#2c2f38"/><path d="M290 150V120H340"/><path d="M345 120v14" />
+    <rect x="30" y="170" width="105" height="14" fill="#4a3a2a"/><path d="M45 184V240M120 184V240"/><rect x="60" y="158" width="26" height="12" fill="#e9e1d0" fill-opacity=".8"/>
+  </g>
+  <circle class="flick" cx="345" cy="142" r="2" fill="#7ab"/>
+  <text x="318" y="285" fill="#e9e1d0" font-size="16">→ гостиная</text>
+  <${R} data-h="window" x="30" y="40" width="110" height="90"/><${R} data-h="fridge" x="165" y="125" width="90" height="115"/><${R} data-h="cupboard" x="165" y="60" width="90" height="62"/>
+  <${R} data-h="sink" x="280" y="110" width="100" height="130"/><${R} data-h="note" x="30" y="156" width="105" height="30"/><${R} data-h="toLiving" x="305" y="262" width="95" height="38"/>`,
+
+  attic: () => `<rect width="400" height="300" fill="#16121d"/><polygon points="0,245 400,245 400,300 0,300" fill="#0b0910"/>
+  <g filter="url(#wob)" ${ink} fill="none">
+    <path d="M0 80L200 10L400 80" stroke-opacity=".5"/><circle cx="330" cy="70" r="26" fill="#243049"/><path d="M304 70H356M330 44V96"/>
+    <rect x="30" y="170" width="130" height="75" fill="#4a3322"/><path d="M30 190H160"/><rect x="85" y="188" width="20" height="22" fill="#111"/><circle cx="95" cy="199" r="3" fill="#d8dca8" stroke="none"/>
+    <path d="M215 100Q215 90 245 90Q275 90 275 100V245H215Z" fill="#cfc8b8" fill-opacity=".5"/><path d="M215 120Q245 134 275 120" stroke-opacity=".5"/>
+    <rect x="300" y="190" width="60" height="55" fill="#3a2d4f"/><path d="M300 190L330 168L360 190"/><rect x="322" y="210" width="16" height="20" fill="#0a0810"/>
+  </g>
+  <text x="12" y="285" fill="#e9e1d0" font-size="16">↓ вниз</text>
+  <${R} data-h="chest" x="30" y="170" width="130" height="75"/><${R} data-h="sheet" x="215" y="88" width="62" height="157"/>
+  <${R} data-h="dollhouse" x="300" y="168" width="62" height="77"/><${R} data-h="aWin" x="304" y="44" width="52" height="52"/><${R} data-h="toLiving" x="0" y="262" width="90" height="38"/>`
+};
+
+const NAMES = { key1: 'Маленький ключик', key2: 'Ключ от двери', tape: 'Кассета' };
+const ACCEPT = { toAttic: ['key1'], front: ['key2'], radio: ['tape'] };
+
+// --- текст по буквам ---
+let tw;
+function say(t) { clearInterval(tw); const e = $('say'); e.textContent = ''; let i = 0; e._full = t;
+  tw = setInterval(() => { e.textContent = t.slice(0, ++i); if (i >= t.length) clearInterval(tw); }, 16); }
+$('say').onclick = () => { clearInterval(tw); $('say').textContent = $('say')._full || ''; };
+
+// --- звук ---
+let ac, g, on = false;
+$('snd').onclick = () => {
+  if (ac) { on = !on; g.gain.value = on ? .05 : 0; } else {
+    ac = new (window.AudioContext || window.webkitAudioContext)(); g = ac.createGain(); g.gain.value = .05; g.connect(ac.destination);
+    [55, 82.4, 110.5].forEach((f, i) => { const o = ac.createOscillator(); o.type = i ? 'sine' : 'sawtooth'; o.frequency.value = f;
+      const l = ac.createOscillator(); l.frequency.value = .08 + i * .05; const lg = ac.createGain(); lg.gain.value = 3;
+      l.connect(lg); lg.connect(o.frequency); o.connect(g); o.start(); l.start(); }); on = true;
+  }
+  $('snd').textContent = on ? '🔊' : '🔈';
+};
+
+// --- инвентарь / сцены ---
+const has = (i) => S.inv.includes(i);
+function add(i) { S.inv.push(i); renderInv(); }
+function renderInv() {
+  const b = $('inv'); b.innerHTML = ''; $('empty').style.display = S.inv.length ? 'none' : '';
+  S.inv.forEach(i => { const x = document.createElement('button'); x.className = 'it' + (sel === i ? ' on' : ''); x.textContent = NAMES[i];
+    x.onclick = () => { sel = sel === i ? null : i; renderInv(); if (sel) say('Выбрано: ' + NAMES[i] + '. Нажми на то, к чему это приложить.'); }; b.appendChild(x); });
+}
+function go(r) { S.room = r; sel = null; $('art').innerHTML = SCENES[r](); renderInv(); }
+function btn(t, f) { const b = document.createElement('button'); b.className = 'go'; b.textContent = t; b.onclick = f; return b; }
+function dlg(lines, choices) {
+  let i = 0; const m = $('dlgM'), p = $('dlgT'), b = $('dlgB'); m.classList.add('show');
+  const next = () => { b.innerHTML = '';
+    if (i < lines.length) { p.textContent = lines[i++]; b.appendChild(btn('Дальше', next)); }
+    else choices.forEach(c => b.appendChild(btn(c[0], () => { m.classList.remove('show'); c[1](); }))); };
+  next();
+}
+function end(t, p) { $('endT').textContent = t; $('endP').textContent = p; $('endM').classList.add('show'); }
+let codeFor;
+function askCode(t, f) { codeFor = f; $('padT').textContent = t; $('code').value = ''; $('padM').classList.add('show'); setTimeout(() => $('code').focus(), 50); }
+
+const H = {
+  front: (s) => {
+    if (s === 'key2') {
+      if (S.free) return end('Рассвет', 'Дверь открылась без скрипа. Мы с Тимом вышли на крыльцо, и впервые за много лет в доме стало тихо. Позади, в окне, на секунду мелькнуло мамино лицо, и больше я его не видела. Конец.');
+      return end('Побег', 'Мы выбежали на улицу, не оглядываясь. Но шёпот из дома пошёл за нами. Тень осталась, а значит, ничего не закончилось. (Есть и другой конец: попробуй сначала включить кассету.)');
+    }
+    say(S.hasKey2 ? 'Входная дверь заперта. Ключ у меня, но стоит ли идти, пока в доме всё это осталось?' : 'Входная дверь заперта на три замка. Нужен ключ.');
+  },
+  photo: () => say('Семейное фото: мама, папа, я и Тим. Подпись на рамке: «Мама · 14.09». Лицо мамы закрашено чёрным фломастером.'),
+  fire: () => { S.note = true; say('В золе обгоревший клочок бумаги: «…сладкое прячем в кухонном шкафу, наверху. Анна не знает…». Анна — это мама.'); },
+  radio: (s) => {
+    if (s === 'tape') {
+      S.shadow = true; go('living'); sel = null; renderInv();
+      return dlg(['Радио щёлкнуло. Кассета зашуршала, и тихий женский голос запел колыбельную. Мамин голос.',
+        'В камине зашевелилась тень. Она вышла на свет и замерла, склонив голову, как будто слушает.',
+        'Тим сжал мою руку: «Это она. Это мама. Она не злая. Ей просто больно».',
+        'Тень повернулась ко мне. Она ждёт, что я скажу.'],
+        [['Отпустить её: «Мама, мы тебя любим. Можно идти».', () => { S.free = true; S.inv = S.inv.filter(x => x !== 'tape'); renderInv(); say('Тень растворилась в мелодии. Стало теплее. Входная дверь тихо щёлкнула, и ключ мне, кажется, уже нужен только для порядка.'); go('living'); }],
+         ['Остаться с ней: «Мы никуда не уйдём».', () => end('Дом помнит', 'Колыбельная играла всё тише. Мы остались в доме, который больше никогда не отпустит. Утром соседи видели в окнах три силуэта. Плохой конец.')]]);
+    }
+    say(S.hasTape ? 'Радио молчит. Нужно вставить кассету.' : 'Старое радио. Кассетная дека пуста, играет только шипение.');
+  },
+  toKitchen: () => { go('kitchen'); say('Кухня. На столе капает кран, хотя воду никто не включал.'); },
+  toAttic: (s) => {
+    if (S.atticOpen) { go('attic'); return say('Чердак. Пахнет пылью и старыми игрушками.'); }
+    if (s === 'key1') { S.atticOpen = true; S.inv = S.inv.filter(x => x !== 'key1'); go('living'); return say('Ключик подошёл. Дверь на чердак со скрипом открылась. Теперь можно подняться.'); }
+    say('Дверь на чердак закрыта на маленький замок.');
+  },
+  window: () => say('За окном рассвет почему-то не наступает. Часы на стене показывают всё те же 03:07.'),
+  fridge: () => say('В холодильнике детский рисунок: мама улыбается и держит нас за руки. Единственное, что в доме не пугает.'),
+  cupboard: () => {
+    if (!S.note) return say('Шкаф с банками. Верхняя полка забита. Не знаю, что искать, лучше сначала осмотреться в доме.');
+    if (!S.hasKey1) { S.hasKey1 = true; add('key1'); say('Наверху за банкой с печеньем лежал маленький ключик. Похоже на ключ от чердачной двери.'); }
+    else say('Остались только крошки.');
+  },
+  sink: () => say('Кап. Кап. Кап. Ритм похож на колыбельную.'),
+  note: () => say('Записка маминой рукой: «Тим, Мара, если вы это читаете, значит, я ещё здесь. Самое дорогое храню в сундуке. Код вы знаете».'),
+  toLiving: () => { go('living'); say('Гостиная. Камин потрескивает без огня.'); },
+  aWin: () => say('Круглое окошко. Во дворе качели. Они раскачиваются сами.'),
+  dollhouse: () => say('Кукольный дом точная копия нашего. В подвале стоит крошечная чёрная фигурка. Я поскорее отвернулась.'),
+  sheet: () => say('Под простынёй старое зеркало. В нём отражаюсь я, Тим, а рядом ещё кто-то высокий. Я накрыла зеркало обратно.'),
+  chest: () => {
+    if (S.chestOpen) return say('Сундук пуст.');
+    askCode('Сундук', () => {
+      if ($('code').value === '1409') { S.chestOpen = true; S.hasKey2 = S.hasTape = true; add('key2'); add('tape'); $('padM').classList.remove('show');
+        say('Замок открылся. Внутри ключ от входной двери и кассета с надписью «Для Мары и Тима». Радио в гостиной, кажется, как раз под кассету.'); }
+      else { $('padM').classList.remove('show'); say('Замок не открылся. Нужна дата, которую мама подписала на семейном фото.'); }
+    });
+  }
+};
+
+function reset() {
+  S = { room: 'living', inv: [], shadow: false }; sel = null;
+  ['endM', 'padM', 'dlgM'].forEach(i => $(i).classList.remove('show'));
+  go('living');
+  say('Мы с Тимом выбрались из подвала, но дом не выпускает нас. Входная дверь заперта. Нужен ключ, и, кажется, этот дом хранит ответы.');
+}
+
+$('scene').addEventListener('click', (e) => {
+  const h = e.target.closest('[data-h]'); if (!h) return;
+  const id = h.dataset.h;
+  if (sel && !(ACCEPT[id] || []).includes(sel)) return say('Это здесь не поможет.');
+  H[id](sel);
+});
+$('wrap').addEventListener('pointermove', (e) => { const r = $('wrap').getBoundingClientRect(); const w = $('wrap').style;
+  w.setProperty('--x', (e.clientX - r.left) + 'px'); w.setProperty('--y', (e.clientY - r.top) + 'px'); });
+$('wrap').addEventListener('pointerdown', (e) => { const r = $('wrap').getBoundingClientRect(); const w = $('wrap').style;
+  w.setProperty('--x', (e.clientX - r.left) + 'px'); w.setProperty('--y', (e.clientY - r.top) + 'px'); });
+$('hintBtn').onclick = () => { const w = $('wrap'), s = $('scene'); w.classList.add('lit'); s.classList.add('hint'); setTimeout(() => { w.classList.remove('lit'); s.classList.remove('hint'); }, 1600); };
+$('restart').onclick = reset; $('again').onclick = reset;
+$('codeX').onclick = () => $('padM').classList.remove('show');
+$('codeOk').onclick = () => codeFor && codeFor();
+$('code').addEventListener('keydown', (e) => { if (e.key === 'Enter' && codeFor) codeFor(); });
+reset();
+</script>
+</body>
+</html>
